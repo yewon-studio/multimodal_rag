@@ -19,43 +19,9 @@ PDF의 **텍스트·표·차트 이미지**를 함께 검색하고 답하는 멀
 
 ## 2. 아키텍처
 
-```mermaid
-flowchart LR
-    PDF[("economy.pdf<br/>21쪽")]
+![멀티모달 RAG 아키텍처](docs/architecture.png)
 
-    subgraph S1["① 파싱 · src/extract.py"]
-        P["partition_pdf<br/>hi_res + kor/eng OCR"]
-        T["텍스트 블록<br/>→ 2000토큰 분할"]
-        TB["표"]
-        IM["차트 이미지<br/>data/figures/*.jpg<br/>(제목 포함 crop)"]
-        P --> T & TB & IM
-    end
-
-    subgraph S2["② 요약 · src/summarize.py"]
-        ST["텍스트 요약<br/>gpt-4o-mini"]
-        STB["표 요약<br/>gpt-4o-mini"]
-        SI["이미지 요약<br/>gpt-4o-mini Vision<br/>(Base64 입력)"]
-    end
-
-    subgraph S3["③ 저장·검색·답변 · src/retriever.py"]
-        VS[("벡터 저장소<br/>요약 임베딩<br/>= 색인 카드")]
-        DS[("InMemoryStore<br/>원본 텍스트·표·Base64 이미지<br/>= 서가")]
-        R{{"MultiVectorRetriever<br/>요약으로 검색 → doc_id로 원본 반환"}}
-        LLM["gpt-4o-mini<br/>원본 이미지 + 원문 + 질문"]
-    end
-
-    PDF --> P
-    T --> ST --> VS
-    TB --> STB --> VS
-    IM --> SI --> VS
-    T -. 원본 .-> DS
-    TB -. 원본 .-> DS
-    IM -. 원본 .-> DS
-    Q(["사용자 질문"]) --> R
-    VS --> R
-    DS --> R
-    R --> LLM --> A(["답변 (한국어)"])
-```
+> draw.io로 직접 작도. 위에서부터 ① 파싱 → ② 요약 → ③ 저장·검색·답변 순서이며, 오른쪽 열(차트 41 → 비전 → 차트 설명문)이 텍스트 RAG 대비 추가된 이미지 경로입니다.
 
 ### 왜 "요약으로 검색, 원본으로 답변"인가 (내 말로)
 
@@ -188,6 +154,8 @@ multimodal-rag/
 ├── requirements.txt
 ├── requirements.lock.txt
 ├── README.md
+├── docs/
+│   └── architecture.png    # 아키텍처 다이어그램 (draw.io 직접 작도)
 ├── data/
 │   ├── economy.pdf         # 원본 PDF (Git 제외)
 │   ├── figures/            # 추출된 차트 이미지 (Git 제외)
